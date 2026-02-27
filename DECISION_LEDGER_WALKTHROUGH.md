@@ -84,7 +84,7 @@ Every receipt written to `logs/decision_receipts.ndjson` follows this unified, d
 ## 2. Field Reference (Plain English)
 
 | Field | What It Means | Example |
-|:------|:---------|:-------------|:--------|
+|:------|:-------------|:--------|
 | `ts` | **When** — UTC timestamp of this event | `"2026-02-27T10:15:33.421Z"` |
 | `trace_id` | **Which conversation** — links all receipts from one user query | `"t1-port-a1b2c3d4-..."` |
 | `agent_persona` | **Who** — agent ID + human name | `"l3_vic::Virtual Investment Concierge L3"` |
