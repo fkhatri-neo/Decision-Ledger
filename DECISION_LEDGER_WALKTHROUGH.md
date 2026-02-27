@@ -83,24 +83,24 @@ Every receipt written to `logs/decision_receipts.ndjson` follows this unified, d
 
 ## 2. Field Reference (Plain English)
 
-| Field | Category | What It Means | Example |
+| Field | What It Means | Example |
 |:------|:---------|:-------------|:--------|
-| `ts` | Core | **When** — UTC timestamp of this event | `"2026-02-27T10:15:33.421Z"` |
-| `trace_id` | Core | **Which conversation** — links all receipts from one user query | `"t1-port-a1b2c3d4-..."` |
-| `agent_persona` | Core | **Who** — agent ID + human name | `"l3_vic::Virtual Investment Concierge L3"` |
-| `event_type` | Core | **What happened** — one of the 7 lifecycle steps | `"tool_propose"` |
-| `system_instructions` | State | **Agent's instructions** — the system prompt (only on `task_start`) | `"You are the VIC..."` |
-| `state_snapshot` | State | **World state** — query, context, tools already called | `{"query": "...", "tool_call_history": {}}` |
-| `chain_of_thought` | Cognitive | **Why** — the LLM's actual reasoning before a decision | `"User wants portfolio data, calling..."` |
-| `discarded_paths` | Cognitive | **What else was considered** — rejected alternatives | `["Could use financial_analyst but..."]` |
-| `invocation_specs` | Tool | **Tool + arguments** — what's being called and with what | `{"tool": "call_portfolio_analyzer", "kwargs": {...}}` |
-| `latency_ms` | Tool | **Duration** — how long the operation took | `14805.00` (= 14.8 seconds) |
-| `error_category` | Tool | **Failure type** — structured error taxonomy | `"SYSTEM_ERROR"`, `"MODEL_ERROR"`, `"TOOL_ERROR"` |
-| `evidence` | Feedback | **Proof of work** — output size, preview, content flags | `{"output_chars": 4521, "has_content": true}` |
-| `success_label` | Feedback | **Quick tag** — did it work? | `"ok"`, `"fail"`, `"timeout"` |
-| `hitl_annotation` | Feedback | **Human review slot** — always `null` now, for future use | `null` |
-| `reward_score` | Feedback | **RLAIF training slot** — always `null` now, for future use | `null` |
-| `task_id` | Core | **Task reference** — links to A2A task tracking | `"task-t1-001"` |
+| `ts` | **When** — UTC timestamp of this event | `"2026-02-27T10:15:33.421Z"` |
+| `trace_id` | **Which conversation** — links all receipts from one user query | `"t1-port-a1b2c3d4-..."` |
+| `agent_persona` | **Who** — agent ID + human name | `"l3_vic::Virtual Investment Concierge L3"` |
+| `event_type` | **What happened** — one of the 7 lifecycle steps | `"tool_propose"` |
+| `system_instructions` | **Agent's instructions** — the system prompt (only on `task_start`) | `"You are the VIC..."` |
+| `state_snapshot` | **World state** — query, context, tools already called | `{"query": "...", "tool_call_history": {}}` |
+| `chain_of_thought` | **Why** — the LLM's actual reasoning before a decision | `"User wants portfolio data, calling..."` |
+| `discarded_paths` | **What else was considered** — rejected alternatives | `["Could use financial_analyst but..."]` |
+| `invocation_specs` | **Tool + arguments** — what's being called and with what | `{"tool": "call_portfolio_analyzer", "kwargs": {...}}` |
+| `latency_ms` | **Duration** — how long the operation took | `14805.00` (= 14.8 seconds) |
+| `error_category` | **Failure type** — structured error taxonomy | `"SYSTEM_ERROR"`, `"MODEL_ERROR"`, `"TOOL_ERROR"` |
+| `evidence` | **Proof of work** — output size, preview, content flags | `{"output_chars": 4521, "has_content": true}` |
+| `success_label` | **Quick tag** — did it work? | `"ok"`, `"fail"`, `"timeout"` |
+| `hitl_annotation` | **Human review slot** — always `null` now, for future use | `null` |
+| `reward_score` | **RLAIF training slot** — always `null` now, for future use | `null` |
+| `task_id` | **Task reference** — links to A2A task tracking | `"task-t1-001"` |
 
 ---
 
