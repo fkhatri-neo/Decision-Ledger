@@ -1,8 +1,8 @@
-# 🔍 Glass Box Governance — NDJSON Decision Ledger Walkthrough
+# 🔍 Glass Box NDJSON Decision Ledger Walkthrough
 
 > **Every agent decision, every tool call, every reasoning step — recorded as a single JSON line.**
 
-This document walks through two real-world conversations to show exactly what the Governance Ledger captures, why each field exists, and how to query the resulting log.
+This document walks through two real-world conversations to show exactly what the Decision Ledger captures, why each field exists, and how to query the resulting log.
 
 ---
 
@@ -19,7 +19,7 @@ This document walks through two real-world conversations to show exactly what th
 
 ## 1. Schema at a Glance
 
-Every receipt written to `logs/governance_receipts.ndjson` follows this unified, deduplicated schema:
+Every receipt written to `logs/decision_receipts.ndjson` follows this unified, deduplicated schema:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -414,24 +414,6 @@ Each block below is **one line** in the actual `.ndjson` file (formatted here fo
 }
 ```
 
-### Task 1 Timeline Bar
-
-```
-  TIME (seconds)   0s      5s      10s     15s     20s
-                   │───────│───────│───────│───────│
-                   │                                │
-  L3 VIC           ████████████████████████████████████  task_start → task_complete
-                   │  ▽ call_portfolio_analyzer      │   (19.8s total)
-                   │                                 │
-  L2 Portfolio     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │   task_start → task_complete
-                   │  ▽ portfolio_l1_agent           │   (14.1s total)
-                   │                                 │
-  L1 Primitive     │  ░░░░░░░░░░░░░░                 │   task_start → task_complete
-                   │                                 │   (6.5s total)
-                   │───────│───────│───────│───────│
-                   0s      5s      10s     15s     20s
-```
-
 ---
 
 ## 4. Task 2 — Market Impact on Portfolio
@@ -559,32 +541,6 @@ Each block below is **one line** in the actual `.ndjson` file (formatted here fo
   ║  exceeding the 35% concentration threshold. Recommendation: Consider           ║
   ║  trimming RELIANCE position to ~25% and diversifying into..."                   ║
   ╚══════════════════════════════════════════════════════════════════════════════════╝
-```
-
-### Task 2 Timeline Bar
-
-```
-  TIME (seconds)   0s         10s        20s        30s        40s        47s
-                   │──────────│──────────│──────────│──────────│──────────│
-                   │                                                      │
-  L3 VIC           ██████████████████████████████████████████████████████████
-                   │ STEP 1: Financial Analysis    │ STEP 2: Portfolio   │
-                   │ ▽ call_financial_analyst       │ ▽ call_portfolio_   │
-                   │                                │   analyzer          │
-                   │                                │                     │
-  L2 Financial     │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │                     │
-  Analyst          │  ▽ call_securities_analyst     │                     │
-                   │                                │                     │
-  L2 Portfolio     │                                │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
-  Analyzer         │                                │ ▽ portfolio_l1_    │
-                   │                                │                     │
-  L1 Securities    │ ░░░░░░░░░░░░░░░░░░░░          │                     │
-  Analyst          │ ▽alpha_vantage ▽marketaux_news │                     │
-                   │                                │                     │
-  L1 Portfolio     │                                │  ░░░░░░░░░░░       │
-  Primitive        │                                │                     │
-                   │──────────│──────────│──────────│──────────│──────────│
-                   0s         10s        20s        30s        40s        47s
 ```
 
 ### Ledger Output — 27 Receipt Lines
@@ -998,17 +954,17 @@ The `.ndjson` format is designed for Unix pipes, `jq`, and stream processing.
 
 ```bash
 # Watch events appear in real time as you chat with VIC
-tail -f logs/governance_receipts.ndjson | jq '.'
+tail -f logs/decision_receipts.ndjson | jq '.'
 ```
 
 ### Filtering by Conversation
 
 ```bash
 # All events from Task 1
-jq 'select(.trace_id | startswith("t1-"))' logs/governance_receipts.ndjson
+jq 'select(.trace_id | startswith("t1-"))' logs/decision_receipts.ndjson
 
 # All events from Task 2
-jq 'select(.trace_id | startswith("t2-"))' logs/governance_receipts.ndjson
+jq 'select(.trace_id | startswith("t2-"))' logs/decision_receipts.ndjson
 ```
 
 ### Reading the Agent's Mind
@@ -1020,7 +976,7 @@ jq 'select(.event_type=="tool_propose") | {
   tool:  .invocation_specs.tool,
   why:   .chain_of_thought,
   also_considered: .discarded_paths
-}' logs/governance_receipts.ndjson
+}' logs/decision_receipts.ndjson
 ```
 
 ### Performance Analysis
@@ -1032,12 +988,12 @@ jq 'select(.latency_ms > 10000) | {
   event: .event_type,
   tool:  .invocation_specs.tool,
   ms:    .latency_ms
-}' logs/governance_receipts.ndjson
+}' logs/decision_receipts.ndjson
 
 # Average latency per tool
 jq -s '[.[] | select(.latency_ms)] | group_by(.invocation_specs.tool) | 
   map({tool: .[0].invocation_specs.tool, avg_ms: (map(.latency_ms) | add / length)})' \
-  logs/governance_receipts.ndjson
+  logs/decision_receipts.ndjson
 ```
 
 ### Failure Analysis
@@ -1048,63 +1004,24 @@ jq 'select(.event_type=="task_fail" or .event_type=="tool_error") | {
   agent:    .agent_persona,
   category: .error_category,
   label:    .success_label
-}' logs/governance_receipts.ndjson
+}' logs/decision_receipts.ndjson
 ```
 
 ### Event Count Summary
 
 ```bash
 # Events per agent
-jq -r '.agent_persona' logs/governance_receipts.ndjson | sort | uniq -c | sort -rn
+jq -r '.agent_persona' logs/decision_receipts.ndjson | sort | uniq -c | sort -rn
 
 # Events by type
-jq -r '.event_type' logs/governance_receipts.ndjson | sort | uniq -c | sort -rn
-```
-
----
-
-## 6. Receipt Counts Comparison
-
-```
-                              Task 1           Task 2
-                           (Portfolio)       (Market + Portfolio)
-                          ─────────────     ──────────────────────
-
-  Agents involved                3                   5
-  Agent tiers hit            L3→L2→L1          L3→L2→L1→L2→L1
-
-  ┌─────────────────┐
-  │ task_start       │        3                   5
-  │ tool_propose     │        2                   6
-  │ tool_execute     │        2                   6
-  │ tool_complete    │        2                   6
-  │ tool_error       │        0                   0
-  │ task_complete    │        3                   5
-  │ task_fail        │        0                   0
-  ├─────────────────┤
-  │ TOTAL RECEIPTS   │       11                  27  ←  (was 28,
-  └─────────────────┘                                  but L3's
-                                                       2nd tool_
-  End-to-end latency     ~19.8 seconds         ~46.7 seconds
-                                                complete doubles
-  External API calls          0                   2              
-  (alpha_vantage,              (all via          (alpha_vantage   as receipt)
-   marketaux_news)              A2A)             + marketaux)
-
-  ── Receipts by Agent ──────────────────────────────────────────
-
-  L3 VIC               █████ 5              ████████████ 9
-  L2 Financial          —                   ████████ 6
-  L2 Portfolio         ████ 4               ████████ 6       ← same sub-flow
-  L1 Securities         —                   ███████ 6        ← 2 external tools
-  L1 Primitive         ██ 2                 ██ 2
+jq -r '.event_type' logs/decision_receipts.ndjson | sort | uniq -c | sort -rn
 ```
 
 ---
 
 ## Summary
 
-The Glass Box Governance Ledger transforms **invisible multi-agent orchestration** into a **fully auditable, queryable decision trail**. For every user question:
+The Glass Box Decision Ledger transforms **invisible multi-agent orchestration** into a **fully auditable, queryable decision trail**. For every user question:
 
 1. **You know WHO decided** — `agent_persona` tracks every agent
 2. **You know WHAT they did** — `event_type` + `invocation_specs` log every tool call
@@ -1114,4 +1031,3 @@ The Glass Box Governance Ledger transforms **invisible multi-agent orchestration
 6. **You know IF it worked** — `success_label` + `evidence` + `error_category`
 7. **You can train on it later** — `hitl_annotation` + `reward_score` are RLAIF-ready
 
-> *"The best debugging tool is a complete record of every decision your AI ever made."*
